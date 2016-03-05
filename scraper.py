@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#!/usr/bin/env python
 
 #This is the first step in creating a scraper to grab details from PDFs
 #This just goes to one page, grabs the description, and grabs the PDF url
@@ -28,7 +29,6 @@ cr000129ba1aldergroveandantrimfm.htm
 cr000126ba2aliveradio.htm
 cr000170ba2ambersoundfm.htm
 cr000175ba2amburradio.htm
-cr000254ba1anr%C3%A8idio.htm
 cr000002ba3angelradio.htm
 cr000007ba1angelradioisleofwight.htm
 cr000241ba1applefm.htm
@@ -130,7 +130,6 @@ cr000184ba2inspirationfm.htm
 cr000198ba2inspirefm.htm
 cr000087ba3ipswichcommunityradio.htm
 cr000263ba2irvinebeatfm.htm
-cr000046ba1i%C3%BArfm.htm
 cr000261ba1k107fm.htm
 cr000162ba3kcclive.htm
 cr000264ba1kcr.htm
@@ -143,7 +142,6 @@ cr000195ba2leisurefm.htm
 cr000166ba3lincolncityradio.htm
 cr100157ba1linkfm.htm
 cr000049ba2lionheartradio.htm
-cr000139ba1lisburn%E2%80%99s98fm.htm
 cr100797ba1mkfm.htm
 cr000209ba3marlowfm.htm
 cr000134ba2mearnsfm.htm
@@ -190,7 +188,6 @@ cr000082ba1radioteesdale.htm
 cr000111ba1radiotircoed.htm
 cr000090ba1radioverulam.htm
 cr000233ba1radiowinchcombe.htm
-cr000044ba2raidi%C3%B3f%C3%A1ilte.htm
 cr000151ba3redroadfm.htm
 cr000224ba2reprezent1073fm.htm
 cr000060ba3resonancefm.htm
@@ -256,25 +253,40 @@ cr000028ba1shmufm.htm'''
 #split that string on each new line, to create a list
 urllist = urls.split('\n')
 
-# # Read in a page
-html = scraperwiki.scrape(baseurl+urllist[0])
+#define a function which will grab the description and link
+#It uses one argument: a parameter (variable) it calls url
+def grablinks(url):
+    #This line uses the url variable
+    html = scraperwiki.scrape(baseurl+url)
+    #Turn it into an lxml 'object' we call root
+    root = lxml.html.fromstring(html)
+    #grab the items in that page within div class='body' and within p tags - this is put in a list variable called ps
+    ps = root.cssselect("div.body p")
+    #turn the first item in that list [0] to a string and print it
+    print lxml.html.tostring(ps[0])
+    #use text_content() to just grab the text, not the HTML tags, from the same item
+    description = ps[0].text_content()
+    print description
+    #grab the items in that page within div class='body' in p tags and then a tags - this is put in a list variable called links
+    links = root.cssselect("div.body p a")
+    #this time we don't want the text but the actual link attribute itself
+    #the method .attrib will grab the specified attribute of the first item [0] in links
+    pdflink = links[0].attrib['href']
+    print pdflink
 
-#Turn it into an lxml 'object' we call root
-root = lxml.html.fromstring(html)
-#grab the items in that page within div class='body' and within p tags - this is put in a list variable called ps
-ps = root.cssselect("div.body p")
-#turn the first item in that list [0] to a string and print it
-print lxml.html.tostring(ps[0])
-#use text_content() to just grab the text, not the HTML tags, from the same item
-description = ps[0].text_content()
-print description
-#grab the items in that page within div class='body' in p tags and then a tags - this is put in a list variable called links
-links = root.cssselect("div.body p a")
-#this time we don't want the text but the actual link attribute itself
-#the method .attrib will grab the specified attribute of the first item [0] in links
-pdflink = links[0].attrib['href']
-print pdflink
+    #At this stage nothing is stored but we have used print to check we are getting what we want.
+    #What we don't know yet is whether the first p is ALWAYS the description, and whether the first link in that div is ALWAYS the PDF.
+    #That's what we text next, but I'm going to put that in a fork of this.
 
-#At this stage nothing is stored but we have used print to check we are getting what we want. 
-#What we don't know yet is whether the first p is ALWAYS the description, and whether the first link in that div is ALWAYS the PDF.
-#That's what we text next, but I'm going to put that in a fork of this.
+#loop through the list and run the 'grablinks' function defined above on each url
+for url in urllist:
+    print 'scraping', url
+    grablinks(url)
+    #First time this generated an error on this url: cr000254ba1anr%C3%A8idio.htm
+    #Testing it, this is a dead link from the Ofcom page: http://www.ofcom.org.uk/static/radiolicensing/html/radio-stations/community/community-main.htm
+    #So it is removed from the list
+    #This is also an error: 'cr000046ba1irfm.htm'
+    #cr000139ba1lisburn%E2%80%99s98fm.htm
+    #cr000044ba2raidi%C3%B3f%C3%A1ilte.htm
+
+#Next step is to do something with the PDF links grabbed from each page. That will be on another fork.
